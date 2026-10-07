@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plungelab running cost calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --navy:#0b1726;
+  --charcoal:#161d27;
+  --panel:#1c2531;
+  --line:#2c3847;
+  --concrete:#9aa3ae;
+  --text:#e8edf2;
+  --water:#6cc3d5;
+  --water-deep:#2a7f93;
+  --warn:#e3b66b;
+  --head:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--navy);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto;padding:28px 18px 56px}
+h1{font-family:var(--head);font-weight:600;font-size:clamp(2.2rem,7vw,3.6rem);line-height:1;margin:0 0 10px;letter-spacing:.01em}
+.lede{color:var(--concrete);max-width:56ch;margin:0 0 28px}
+.grid{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:860px){.grid{grid-template-columns:1.05fr .95fr;align-items:start}.result{position:sticky;top:18px}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px}
+fieldset{border:0;padding:0;margin:0 0 22px}
+legend,.lbl{font-family:var(--head);font-weight:600;font-size:1.25rem;margin-bottom:8px;padding:0;display:block}
+.hint{color:var(--concrete);font-size:.86rem;margin:6px 0 0}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.seg span{display:block;text-align:center;padding:12px 8px;min-height:48px;border:1px solid var(--line);border-radius:4px;background:var(--charcoal);font-size:.92rem;line-height:1.25}
+.seg input:checked + span{border-color:var(--water);background:#143342;color:#fff}
+.seg input:focus-visible + span{outline:2px solid var(--water);outline-offset:2px}
+.seg small{display:block;color:var(--concrete);font-size:.76rem;margin-top:2px}
+.seg input:checked + span small{color:#b9dde6}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.row output{font-family:var(--head);font-size:1.5rem;font-weight:600;color:var(--water)}
+input[type=range]{width:100%;accent-color:var(--water);height:32px}
+.big{font-family:var(--head);font-weight:700;font-size:clamp(3.4rem,13vw,5.2rem);line-height:.95;color:#fff;font-variant-numeric:tabular-nums}
+.big small{font-size:1.4rem;font-weight:500;color:var(--concrete);margin-left:6px}
+.sub{color:var(--concrete);margin:6px 0 20px}
+.bars{margin:6px 0 18px}
+.bar{margin-bottom:12px}
+.bar .t{display:flex;justify-content:space-between;font-size:.9rem;margin-bottom:5px}
+.bar .track{height:14px;background:var(--charcoal);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%;border-radius:3px;transition:width .35s ease}
+.f-us{background:var(--water)}
+.f-them{background:#58626f}
+.save{display:inline-block;background:#143342;border:1px solid var(--water-deep);color:#d6eef4;padding:6px 12px;border-radius:4px;font-size:.92rem;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:.95rem;font-variant-numeric:tabular-nums}
+td{padding:8px 0;border-top:1px solid var(--line)}
+td:last-child{text-align:right}
+tr.total td{font-weight:600;border-top:2px solid var(--line)}
+details{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+summary{cursor:pointer;font-family:var(--head);font-weight:600;font-size:1.15rem;min-height:44px;display:flex;align-items:center}
+summary:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+.ass{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.ass label{font-size:.82rem;color:var(--concrete);display:block}
+.ass input{width:100%;margin-top:3px;background:var(--charcoal);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:4px;font:inherit;font-size:.95rem}
+.ass input:focus-visible{outline:2px solid var(--water);outline-offset:1px}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--warn);background:#222a33;color:#d9d2c1;font-size:.84rem;border-radius:0 4px 4px 0}
+.cta{display:block;text-align:center;margin-top:18px;background:var(--water);color:#06222b;font-weight:600;text-decoration:none;padding:15px 18px;border-radius:4px;min-height:48px}
+.cta:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.bar .fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>What will it cost to run?</h1>
+<p class="lede">Pick your equipment and see a real monthly figure. Change anything and the numbers move straight away.</p>
+<div class="grid">
+<div class="panel" id="controls">
+<fieldset>
+<legend>Season</legend>
+<div class="seg" role="radiogroup">
+<label><input type="radio" name="season" value="winter"><span>Winter<small>about 11°C air</small></span></label>
+<label><input type="radio" name="season" value="shoulder" checked><span>Autumn / Spring<small>about 16°C air</small></span></label>
+<label><input type="radio" name="season" value="summer"><span>Summer<small>about 22°C air</small></span></label>
+</div>
+</fieldset>
+<fieldset>
+<legend>Water temperature</legend>
+<div class="row"><span class="hint" style="margin:0">Cold plunge to warm soak</span><output id="tempOut">30°C</output></div>
+<input type="range" id="temp" min="8" max="38" value="30" aria-label="Water temperature in degrees Celsius">
+</fieldset>
+<fieldset>
+<legend>Heating</legend>
+<div class="seg" role="radiogroup">
+<label><input type="radio" name="heat" value="none"><span>None<small>cold plunge</small></span></label>
+<label><input type="radio" name="heat" value="hp" checked><span>Heat pump<small>efficient</small></span></label>
+<label><input type="radio" name="heat" value="el"><span>Electric element<small>simple</small></span></label>
+</div>
+</fieldset>
+<fieldset>
+<legend>Insulated cover</legend>
+<div class="seg" role="radiogroup">
+<label><input type="radio" name="cover" value="yes" checked><span>Cover on when not in use</span></label>
+<label><input type="radio" name="cover" value="no"><span>No cover</span></label>
+</div>
+</fieldset>
+<fieldset>
+<legend>Pump</legend>
+<div class="seg" role="radiogroup">
+<label><input type="radio" name="pump" value="eco" checked><span>Speck 90/350 Eco<small>variable speed</small></span></label>
+<label><input type="radio" name="pump" value="std"><span>Standard pump<small>single speed</small></span></label>
+</div>
+<div class="row" style="margin-top:14px"><span class="hint" style="margin:0">Hours running each day</span><output id="hrsOut">8 h</output></div>
+<input type="range" id="hrs" min="2" max="24" value="8" aria-label="Pump hours per day">
+</fieldset>
+<fieldset style="margin-bottom:6px">
+<legend>Water treatment</legend>
+<div class="seg" role="radiogroup">
+<label><input type="radio" name="san" value="naked" checked><span>Naked NKD-1<small>freshwater system</small></span></label>
+<label><input type="radio" name="san" value="chlor"><span>Traditional chlorine<small>chemicals</small></span></label>
+</div>
+</fieldset>
+<details>
+<summary>Change the assumptions</summary>
+<div class="ass">
+<label>Power price ($/kWh)<input id="a_rate" type="number" step="0.01" value="0.30"></label>
+<label>Pool surface (m²)<input id="a_area" type="number" step="0.5" value="6"></label>
+<label>Eco pump draw (W)<input id="a_eco" type="number" step="10" value="120"></label>
+<label>Standard pump draw (W)<input id="a_std" type="number" step="10" value="750"></label>
+<label>Heat pump efficiency (COP)<input id="a_cop" type="number" step="0.1" value="4"></label>
+<label>Cover heat saving (%)<input id="a_cov" type="number" step="5" value="70"></label>
+<label>Naked system ($/month)<input id="a_naked" type="number" step="1" value="15"></label>
+<label>Chlorine and chemicals ($/month)<input id="a_chl" type="number" step="1" value="40"></label>
+<label>Water top-up ($/month)<input id="a_wat" type="number" step="1" value="5"></label>
+<label>Typical traditional pool ($/month)<input id="a_trad" type="number" step="10" value="250"></label>
+</div>
+</details>
+</div>
+<div class="panel result" aria-live="polite">
+<div class="big"><span id="month">$0</span><small>per month</small></div>
+<p class="sub"><span id="year">$0</span> a year, based on your choices</p>
+<div class="bars">
+<div class="bar"><div class="t"><span>Plungelab</span><span id="barUsTxt"></span></div><div class="track"><div class="fill f-us" id="barUs"></div></div></div>
+<div class="bar"><div class="t"><span>Typical traditional pool</span><span id="barThemTxt"></span></div><div class="track"><div class="fill f-them" id="barThem"></div></div></div>
+</div>
+<div class="save" id="save"></div>
+<table>
+<tr><td>Pump</td><td id="c_pump"></td></tr>
+<tr><td>Heating</td><td id="c_heat"></td></tr>
+<tr><td>Water treatment</td><td id="c_san"></td></tr>
+<tr><td>Water top-up</td><td id="c_wat"></td></tr>
+<tr class="total"><td>Total each month</td><td id="c_tot"></td></tr>
+</table>
+<p class="note">Prototype only. Equipment draw, chemical and traditional pool figures are placeholders until Plungelab confirms them from the spec sheets. Estimates in NZD, not a quote.</p>
+<a class="cta" href="#">Check if your yard qualifies</a>
+</div>
+</div>
+</div>
+<script>
+(function(){
+var AMBIENT={winter:11,shoulder:16,summer:22};
+function $(id){return document.getElementById(id);}
+function val(id){var v=parseFloat($(id).value);return isNaN(v)?0:v;}
+function radio(name){var r=document.querySelector('input[name="'+name+'"]:checked');return r?r.value:null;}
+function money(n){return '$'+Math.round(n).toLocaleString('en-NZ');}
+function calc(){
+var temp=parseFloat($('temp').value),hrs=parseFloat($('hrs').value),rate=val('a_rate'),ambient=AMBIENT[radio('season')],area=val('a_area'),heat=radio('heat'),cover=radio('cover')==='yes',pump=radio('pump'),san=radio('san');
+var pumpW=pump==='eco'?val('a_eco'):val('a_std');
+var pumpCost=pumpW*hrs*30/1000*rate;
+var dT=Math.max(0,temp-ambient),lossW=area*11*dT;
+if(cover){lossW*=(1-val('a_cov')/100);}
+var thermalKwhMonth=lossW*24*30/1000,heatCost=0;
+if(heat==='hp'){heatCost=thermalKwhMonth/Math.max(1,val('a_cop'))*rate;}
+else if(heat==='el'){heatCost=thermalKwhMonth*rate;}
+var sanCost=san==='naked'?val('a_naked'):val('a_chl'),watCost=val('a_wat'),total=pumpCost+heatCost+sanCost+watCost,trad=val('a_trad');
+$('tempOut').textContent=temp+'°C';$('hrsOut').textContent=hrs+' h';$('month').textContent=money(total);$('year').textContent=money(total*12);
+$('c_pump').textContent=money(pumpCost);$('c_heat').textContent=heat==='none'?'No heating':money(heatCost);$('c_san').textContent=money(sanCost);$('c_wat').textContent=money(watCost);$('c_tot').textContent=money(total);
+var max=Math.max(total,trad,1);$('barUs').style.width=(total/max*100)+'%';$('barThem').style.width=(trad/max*100)+'%';$('barUsTxt').textContent=money(total)+' / month';$('barThemTxt').textContent=money(trad)+' / month';
+var diff=trad-total;
+$('save').textContent=diff>0?'About '+money(diff*12)+' a year less than a typical traditional pool':'These settings cost more than the typical traditional pool figure';
+}
+document.getElementById('controls').addEventListener('input',calc);calc();
+})();
+</script>
+</body>
+</html>
